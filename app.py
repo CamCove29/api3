@@ -123,4 +123,4 @@ def obtener_historial_libro(libro_id):
     return Response(response=json.dumps({"Error": "Historial de ubicación no encontrado"}), status=404, mimetype='application/json')
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8002, debug=False)
+    app.run(host='0.0.0.0', port=8083, debug=False)

@@ -1,0 +1,52 @@
+# Acceder al contenedor de MongoDB
+$ docker exec -it mongo_c bash
+
+# Iniciar mongosh
+$ mongosh
+
+# Crear y usar la base de datos
+use localizacion_db
+
+# Crear las colecciones necesarias si no existen
+db.createCollection("ubicacion")
+db.createCollection("historial_localizacion")
+
+# Insertar documentos de ejemplo en la colección `ubicacion`
+db.ubicacion.insertMany([
+    { cliente_id: 1, nombre: "Carlos Martinez", direccion: "123 Main St, Springfield", latitud: 40.7128, longitud: -74.0060, telefono: "555-1234" },
+    { cliente_id: 2, nombre: "Sofia Garcia", direccion: "456 Elm St, Metropolis", latitud: 34.0522, longitud: -118.2437, telefono: "555-5678" },
+    { cliente_id: 3, nombre: "Luis Perez", direccion: "789 Oak St, Gotham", latitud: 41.8781, longitud: -87.6298, telefono: "555-9101" },
+    { cliente_id: 4, nombre: "Ana Sanchez", direccion: "321 Maple Ave, Star City", latitud: 37.7749, longitud: -122.4194, telefono: "555-2345" },
+    { cliente_id: 5, nombre: "Javier Ramirez", direccion: "654 Pine St, Smallville", latitud: 38.8951, longitud: -77.0364, telefono: "555-6789" },
+    // Nuevos documentos
+    { cliente_id: 6, nombre: "María López", direccion: "111 Birch St, Metropolis", latitud: 36.7783, longitud: -119.4179, telefono: "555-3456" },
+    { cliente_id: 7, nombre: "Pedro Jiménez", direccion: "222 Cedar St, Gotham", latitud: 40.4406, longitud: -79.9959, telefono: "555-7890" },
+    { cliente_id: 8, nombre: "Isabella Torres", direccion: "333 Spruce St, Star City", latitud: 30.2672, longitud: -97.7431, telefono: "555-1230" },
+    { cliente_id: 9, nombre: "Fernando Ruiz", direccion: "444 Ash St, Smallville", latitud: 39.7392, longitud: -104.9903, telefono: "555-4567" },
+    { cliente_id: 10, nombre: "Laura Fernández", direccion: "555 Fir St, Springfield", latitud: 37.7749, longitud: -122.4194, telefono: "555-9876" }
+])
+
+# Insertar documentos de ejemplo en la colección `historial_localizacion`
+db.historial_localizacion.insertMany([
+    { libro_id: 1, cliente_id: 1, ubicacion: "Librería Central", fecha: new Date("2024-10-01T10:00:00Z") },
+    { libro_id: 2, cliente_id: 2, ubicacion: "Biblioteca Municipal", fecha: new Date("2024-10-02T12:30:00Z") },
+    { libro_id: 3, cliente_id: 1, ubicacion: "Café de Lectura", fecha: new Date("2024-10-03T15:45:00Z") },
+    { libro_id: 4, cliente_id: 3, ubicacion: "Librería del Parque", fecha: new Date("2024-10-04T09:15:00Z") },
+    { libro_id: 5, cliente_id: 4, ubicacion: "Centro Cultural", fecha: new Date("2024-10-05T14:00:00Z") },
+    { libro_id: 6, cliente_id: 5, ubicacion: "Café Literario", fecha: new Date("2024-10-06T11:30:00Z") },
+    // Nuevos documentos
+    { libro_id: 7, cliente_id: 6, ubicacion: "Librería El Buen Libro", fecha: new Date("2024-10-07T16:00:00Z") },
+    { libro_id: 8, cliente_id: 7, ubicacion: "Café del Arte", fecha: new Date("2024-10-08T10:30:00Z") },
+    { libro_id: 9, cliente_id: 8, ubicacion: "Biblioteca de la Ciudad", fecha: new Date("2024-10-09T09:00:00Z") },
+    { libro_id: 10, cliente_id: 9, ubicacion: "Casa de la Cultura", fecha: new Date("2024-10-10T11:00:00Z") },
+    { libro_id: 11, cliente_id: 10, ubicacion: "Café Literario", fecha: new Date("2024-10-11T14:00:00Z") }
+])
+
+# Consultar documentos en `ubicacion`
+db.ubicacion.find().pretty()
+
+# Consultar documentos en `historial_localizacion`
+db.historial_localizacion.find().pretty()
+
+# Salir de mongosh
+exit

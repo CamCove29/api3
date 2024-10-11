@@ -1,338 +1,115 @@
-from flask import Flask, request, json, Response
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
+from typing import List
+from datetime import datetime
 from pymongo import MongoClient
-from flasgger import Swagger
 import logging as log
 
-app = Flask(__name__)
-swagger = Swagger(app)  # Inicializa Swagger
+app = FastAPI()
+
+# Configuración de la conexión a MongoDB
+client = MongoClient("mongodb://54.204.121.252:27013")  # Cambia esto por la IP y puerto correctos
+database_name = "sistema_biblioteca"  # Cambia esto por el nombre de tu base de datos
+editorial_collection = client[database_name]["Editorial"]
+editorial_data_collection = client[database_name]["Editorial_data"]
+
+# Configuración del logging
+log.basicConfig(level=log.DEBUG, format='%(asctime)s %(levelname)s:\n%(message)s\n')
+
+# Esquema para "Editorial"
+class Editorial(BaseModel):
+    ID: int
+    nombre: str
+
+# Esquema para "EditorialData"
+class EditorialData(BaseModel):
+    editorial_ID: int  # Referencia al ID de "Editorial"
+    fecha_registro: datetime
+    RUC: str
+    correo_electronico: str
+    pais_origen: str
 
 # Clase para manejar las operaciones con MongoDB
 class MongoAPI:
-    def __init__(self, data):
-        log.basicConfig(level=log.DEBUG, format='%(asctime)s %(levelname)s:\n%(message)s\n')
+    def __init__(self, database: str, collection: str):
         self.client = MongoClient("mongodb://54.204.121.252:27013")  # IP de la base de datos MongoDB
-        database = data['database']
-        collection = data['collection']
-        cursor = self.client[database]
-        self.collection = cursor[collection]
-        self.data = data
+        self.collection = self.client[database][collection]
 
-    # Método para leer los documentos de la colección
     def leer(self):
         log.info('Leyendo todos los datos')
         documentos = self.collection.find()
-        salida = [{item: data[item] for item in data if item != '_id'} for data in documentos]
-        return salida
+        return [{item: data[item] for item in data if item != '_id'} for data in documentos]
 
-    # Método para escribir un nuevo documento en la colección
-    def escribir(self, data):
+    def escribir(self, documento: dict):
         log.info('Escribiendo datos')
-        nuevo_documento = data['Documento']
-        respuesta = self.collection.insert_one(nuevo_documento)
-        salida = {'Estado': 'Insertado exitosamente',
-                  'ID_Documento': str(respuesta.inserted_id)}
-        return salida
+        respuesta = self.collection.insert_one(documento)
+        return {'Estado': 'Insertado exitosamente', 'ID_Documento': str(respuesta.inserted_id)}
 
-    # Método para actualizar un documento en la colección
-    def actualizar(self):
+    def actualizar(self, filtro: dict, datos_actualizados: dict):
         log.info('Actualizando datos')
-        filtro = self.data['Filtro']
-        datos_actualizados = {"$set": self.data['DatosActualizados']}
-        respuesta = self.collection.update_one(filtro, datos_actualizados)
-        salida = {'Estado': 'Actualizado exitosamente' if respuesta.modified_count > 0 else "No se actualizó nada."}
-        return salida
+        respuesta = self.collection.update_one(filtro, {"$set": datos_actualizados})
+        return {'Estado': 'Actualizado exitosamente' if respuesta.modified_count > 0 else "No se actualizó nada."}
 
-    # Método para eliminar un documento en la colección
-    def eliminar(self, data):
+    def eliminar(self, filtro: dict):
         log.info('Eliminando datos')
-        filtro = data['Filtro']
         respuesta = self.collection.delete_one(filtro)
-        salida = {'Estado': 'Eliminado exitosamente' if respuesta.deleted_count > 0 else "Documento no encontrado."}
-        return salida
+        return {'Estado': 'Eliminado exitosamente' if respuesta.deleted_count > 0 else "Documento no encontrado."}
+
+# Rutas para la API de "Editorial"
+@app.get("/editorial", response_model=List[Editorial])
+def obtener_editorial():
+    obj = MongoAPI(database_name, "Editorial")
+    respuesta = obj.leer()
+    return respuesta
+
+@app.post("/editorial", response_model=dict)
+def crear_editorial(documento: Editorial):
+    obj = MongoAPI(database_name, "Editorial")
+    respuesta = obj.escribir(documento.dict())
+    return respuesta
+
+@app.put("/editorial/{editorial_id}", response_model=dict)
+def actualizar_editorial(editorial_id: int, datos_actualizados: Editorial):
+    obj = MongoAPI(database_name, "Editorial")
+    filtro = {"ID": editorial_id}
+    respuesta = obj.actualizar(filtro, datos_actualizados.dict())
+    return respuesta
+
+@app.delete("/editorial/{editorial_id}", response_model=dict)
+def eliminar_editorial(editorial_id: int):
+    obj = MongoAPI(database_name, "Editorial")
+    filtro = {"ID": editorial_id}
+    respuesta = obj.eliminar(filtro)
+    return respuesta
+
+# Rutas para la API de "EditorialData"
+@app.get("/editorial_data", response_model=List[EditorialData])
+def obtener_editorial_data():
+    obj = MongoAPI(database_name, "Editorial_data")
+    respuesta = obj.leer()
+    return respuesta
+
+@app.post("/editorial_data", response_model=dict)
+def crear_editorial_data(documento: EditorialData):
+    obj = MongoAPI(database_name, "Editorial_data")
+    respuesta = obj.escribir(documento.dict())
+    return respuesta
+
+@app.put("/editorial_data/{editorial_data_id}", response_model=dict)
+def actualizar_editorial_data(editorial_data_id: int, datos_actualizados: EditorialData):
+    obj = MongoAPI(database_name, "Editorial_data")
+    filtro = {"editorial_ID": editorial_data_id}
+    respuesta = obj.actualizar(filtro, datos_actualizados.dict())
+    return respuesta
+
+@app.delete("/editorial_data/{editorial_data_id}", response_model=dict)
+def eliminar_editorial_data(editorial_data_id: int):
+    obj = MongoAPI(database_name, "Editorial_data")
+    filtro = {"editorial_ID": editorial_data_id}
+    respuesta = obj.eliminar(filtro)
+    return respuesta
 
 # Ruta base para verificar el estado de la API
-@app.route('/')
+@app.get("/")
 def base():
-    return Response(response=json.dumps({"Estado": "Activo"}),
-                    status=200,
-                    mimetype='application/json')
-
-# API para la tabla "Editorial"
-@app.route('/editorial', methods=['GET'])
-def obtener_editorial():
-    """Obtener todos los editoriales
-    ---
-    responses:
-      200:
-        description: Lista de editoriales
-        schema:
-          type: array
-          items:
-            type: object
-            properties:
-              title:
-                type: string
-              author:
-                type: string
-              ...
-    """
-    data = request.json
-    if data is None or data == {}:
-        return Response(response=json.dumps({"Error": "Por favor proporcione la información de conexión"}),
-                        status=400,
-                        mimetype='application/json')
-    obj1 = MongoAPI(data)
-    respuesta = obj1.leer()
-    return Response(response=json.dumps(respuesta),
-                    status=200,
-                    mimetype='application/json')
-
-@app.route('/editorial', methods=['POST'])
-def crear_editorial():
-    """Crear un nuevo editorial
-    ---
-    parameters:
-      - name: Documento
-        in: body
-        type: object
-        required: true
-        schema:
-          id: Documento
-          properties:
-            title:
-              type: string
-              description: Título del editorial
-            author:
-              type: string
-              description: Autor del editorial
-            ...
-    responses:
-      200:
-        description: Editorial creado
-        schema:
-          type: object
-          properties:
-            Estado:
-              type: string
-              example: 'Insertado exitosamente'
-            ID_Documento:
-              type: string
-              example: '605c72b256c0d454c8d9d41f'
-    """
-    data = request.json
-    if data is None or data == {} or 'Documento' not in data:
-        return Response(response=json.dumps({"Error": "Por favor proporcione la información de conexión"}),
-                        status=400,
-                        mimetype='application/json')
-    obj1 = MongoAPI(data)
-    respuesta = obj1.escribir(data)
-    return Response(response=json.dumps(respuesta),
-                    status=200,
-                    mimetype='application/json')
-
-@app.route('/editorial', methods=['PUT'])
-def actualizar_editorial():
-    """Actualizar un editorial existente
-    ---
-    parameters:
-      - name: Filtro
-        in: body
-        type: object
-        required: true
-        schema:
-          id: Filtro
-          properties:
-            filter_field:
-              type: string
-              description: Campo por el que se filtra
-            filter_value:
-              type: string
-              description: Valor por el que se filtra
-            DatosActualizados:
-              type: object
-              description: Datos a actualizar
-    responses:
-      200:
-        description: Resultado de la actualización
-        schema:
-          type: object
-          properties:
-            Estado:
-              type: string
-              example: 'Actualizado exitosamente'
-    """
-    data = request.json
-    if data is None or data == {} or 'Filtro' not in data:
-        return Response(response=json.dumps({"Error": "Por favor proporcione la información de conexión"}),
-                        status=400,
-                        mimetype='application/json')
-    obj1 = MongoAPI(data)
-    respuesta = obj1.actualizar()
-    return Response(response=json.dumps(respuesta),
-                    status=200,
-                    mimetype='application/json')
-
-@app.route('/editorial', methods=['DELETE'])
-def eliminar_editorial():
-    """Eliminar un editorial
-    ---
-    parameters:
-      - name: Filtro
-        in: body
-        type: object
-        required: true
-        schema:
-          id: Filtro
-          properties:
-            filter_field:
-              type: string
-              description: Campo por el que se filtra
-            filter_value:
-              type: string
-              description: Valor por el que se filtra
-    responses:
-      200:
-        description: Resultado de la eliminación
-        schema:
-          type: object
-          properties:
-            Estado:
-              type: string
-              example: 'Eliminado exitosamente'
-    """
-    data = request.json
-    if data is None or data == {} or 'Filtro' not in data:
-        return Response(response=json.dumps({"Error": "Por favor proporcione la información de conexión"}),
-                        status=400,
-                        mimetype='application/json')
-    obj1 = MongoAPI(data)
-    respuesta = obj1.eliminar(data)
-    return Response(response=json.dumps(respuesta),
-                    status=200,
-                    mimetype='application/json')
-
-# API para la tabla "Editorial_data"
-@app.route('/editorial_data', methods=['GET'])
-def obtener_editorial_data():
-    """Obtener todos los datos editoriales
-    ---
-    responses:
-      200:
-        description: Lista de datos editoriales
-    """
-    data = request.json
-    if data is None or data == {}:
-        return Response(response=json.dumps({"Error": "Por favor proporcione la información de conexión"}),
-                        status=400,
-                        mimetype='application/json')
-    obj1 = MongoAPI(data)
-    respuesta = obj1.leer()
-    return Response(response=json.dumps(respuesta),
-                    status=200,
-                    mimetype='application/json')
-
-@app.route('/editorial_data', methods=['POST'])
-def crear_editorial_data():
-    """Crear un nuevo dato editorial
-    ---
-    parameters:
-      - name: Documento
-        in: body
-        type: object
-        required: true
-        schema:
-          id: Documento
-          properties:
-            title:
-              type: string
-              description: Título del dato editorial
-            author:
-              type: string
-              description: Autor del dato editorial
-            ...
-    responses:
-      200:
-        description: Dato editorial creado
-    """
-    data = request.json
-    if data is None or data == {} or 'Documento' not in data:
-        return Response(response=json.dumps({"Error": "Por favor proporcione la información de conexión"}),
-                        status=400,
-                        mimetype='application/json')
-    obj1 = MongoAPI(data)
-    respuesta = obj1.escribir(data)
-    return Response(response=json.dumps(respuesta),
-                    status=200,
-                    mimetype='application/json')
-
-@app.route('/editorial_data', methods=['PUT'])
-def actualizar_editorial_data():
-    """Actualizar un dato editorial existente
-    ---
-    parameters:
-      - name: Filtro
-        in: body
-        type: object
-        required: true
-        schema:
-          id: Filtro
-          properties:
-            filter_field:
-              type: string
-              description: Campo por el que se filtra
-            filter_value:
-              type: string
-              description: Valor por el que se filtra
-            DatosActualizados:
-              type: object
-              description: Datos a actualizar
-    responses:
-      200:
-        description: Resultado de la actualización
-    """
-    data = request.json
-    if data is None or data == {} or 'Filtro' not in data:
-        return Response(response=json.dumps({"Error": "Por favor proporcione la información de conexión"}),
-                        status=400,
-                        mimetype='application/json')
-    obj1 = MongoAPI(data)
-    respuesta = obj1.actualizar()
-    return Response(response=json.dumps(respuesta),
-                    status=200,
-                    mimetype='application/json')
-
-@app.route('/editorial_data', methods=['DELETE'])
-def eliminar_editorial_data():
-    """Eliminar un dato editorial
-    ---
-    parameters:
-      - name: Filtro
-        in: body
-        type: object
-        required: true
-        schema:
-          id: Filtro
-          properties:
-            filter_field:
-              type: string
-              description: Campo por el que se filtra
-            filter_value:
-              type: string
-              description: Valor por el que se filtra
-    responses:
-      200:
-        description: Resultado de la eliminación
-    """
-    data = request.json
-    if data is None or data == {} or 'Filtro' not in data:
-        return Response(response=json.dumps({"Error": "Por favor proporcione la información de conexión"}),
-                        status=400,
-                        mimetype='application/json')
-    obj1 = MongoAPI(data)
-    respuesta = obj1.eliminar(data)
-    return Response(response=json.dumps(respuesta),
-                    status=200,
-                    mimetype='application/json')
-
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8083, debug=False)
+    return {"Estado": "Activo"}

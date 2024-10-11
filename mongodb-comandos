@@ -1,52 +1,51 @@
-# Acceder al contenedor de MongoDB
 $ docker exec -it mongo_c bash
-
-# Iniciar mongosh
 $ mongosh
 
-# Crear y usar la base de datos
-use localizacion_db
 
-# Crear las colecciones necesarias si no existen
-db.createCollection("ubicacion")
-db.createCollection("historial_localizacion")
+# Ingresar a la base de datos deseada
+use sistema_biblioteca
 
-# Insertar documentos de ejemplo en la colección `ubicacion`
-db.ubicacion.insertMany([
-    { cliente_id: 1, nombre: "Carlos Martinez", direccion: "123 Main St, Springfield", latitud: 40.7128, longitud: -74.0060, telefono: "555-1234" },
-    { cliente_id: 2, nombre: "Sofia Garcia", direccion: "456 Elm St, Metropolis", latitud: 34.0522, longitud: -118.2437, telefono: "555-5678" },
-    { cliente_id: 3, nombre: "Luis Perez", direccion: "789 Oak St, Gotham", latitud: 41.8781, longitud: -87.6298, telefono: "555-9101" },
-    { cliente_id: 4, nombre: "Ana Sanchez", direccion: "321 Maple Ave, Star City", latitud: 37.7749, longitud: -122.4194, telefono: "555-2345" },
-    { cliente_id: 5, nombre: "Javier Ramirez", direccion: "654 Pine St, Smallville", latitud: 38.8951, longitud: -77.0364, telefono: "555-6789" },
-    // Nuevos documentos
-    { cliente_id: 6, nombre: "María López", direccion: "111 Birch St, Metropolis", latitud: 36.7783, longitud: -119.4179, telefono: "555-3456" },
-    { cliente_id: 7, nombre: "Pedro Jiménez", direccion: "222 Cedar St, Gotham", latitud: 40.4406, longitud: -79.9959, telefono: "555-7890" },
-    { cliente_id: 8, nombre: "Isabella Torres", direccion: "333 Spruce St, Star City", latitud: 30.2672, longitud: -97.7431, telefono: "555-1230" },
-    { cliente_id: 9, nombre: "Fernando Ruiz", direccion: "444 Ash St, Smallville", latitud: 39.7392, longitud: -104.9903, telefono: "555-4567" },
-    { cliente_id: 10, nombre: "Laura Fernández", direccion: "555 Fir St, Springfield", latitud: 37.7749, longitud: -122.4194, telefono: "555-9876" }
+# Crear la colección Editorial
+db.createCollection("Editorial")
+
+# Insertar documentos en la colección Editorial
+# Insertar documentos en la colección Editorial
+db.Editorial.insertMany([
+    { ID: 1, nombre: "Editorial Alpha", libros_publicados: [101, 102] },
+    { ID: 2, nombre: "Editorial Beta", libros_publicados: [103, 104] },
+    { ID: 3, nombre: "Editorial Gamma", libros_publicados: [105] },
+    { ID: 4, nombre: "Editorial Delta", libros_publicados: [106, 107] },
+    { ID: 5, nombre: "Editorial Épsilon", libros_publicados: [108, 109] },
+    { ID: 6, nombre: "Editorial Zeta", libros_publicados: [110, 111] },
+    { ID: 7, nombre: "Editorial Eta", libros_publicados: [112] },
+    { ID: 8, nombre: "Editorial Theta", libros_publicados: [113, 114] },
+    { ID: 9, nombre: "Editorial Iota", libros_publicados: [115, 116] },
+    { ID: 10, nombre: "Editorial Kappa", libros_publicados: [117] }
 ])
 
-# Insertar documentos de ejemplo en la colección `historial_localizacion`
-db.historial_localizacion.insertMany([
-    { libro_id: 1, cliente_id: 1, ubicacion: "Librería Central", fecha: new Date("2024-10-01T10:00:00Z") },
-    { libro_id: 2, cliente_id: 2, ubicacion: "Biblioteca Municipal", fecha: new Date("2024-10-02T12:30:00Z") },
-    { libro_id: 3, cliente_id: 1, ubicacion: "Café de Lectura", fecha: new Date("2024-10-03T15:45:00Z") },
-    { libro_id: 4, cliente_id: 3, ubicacion: "Librería del Parque", fecha: new Date("2024-10-04T09:15:00Z") },
-    { libro_id: 5, cliente_id: 4, ubicacion: "Centro Cultural", fecha: new Date("2024-10-05T14:00:00Z") },
-    { libro_id: 6, cliente_id: 5, ubicacion: "Café Literario", fecha: new Date("2024-10-06T11:30:00Z") },
-    // Nuevos documentos
-    { libro_id: 7, cliente_id: 6, ubicacion: "Librería El Buen Libro", fecha: new Date("2024-10-07T16:00:00Z") },
-    { libro_id: 8, cliente_id: 7, ubicacion: "Café del Arte", fecha: new Date("2024-10-08T10:30:00Z") },
-    { libro_id: 9, cliente_id: 8, ubicacion: "Biblioteca de la Ciudad", fecha: new Date("2024-10-09T09:00:00Z") },
-    { libro_id: 10, cliente_id: 9, ubicacion: "Casa de la Cultura", fecha: new Date("2024-10-10T11:00:00Z") },
-    { libro_id: 11, cliente_id: 10, ubicacion: "Café Literario", fecha: new Date("2024-10-11T14:00:00Z") }
+
+# Crear la colección Editorial_data
+db.createCollection("Editorial_data")
+
+# Insertar documentos en la colección Editorial
+db.Editorial_data.insertMany([
+    { editorial_ID: 1, fecha_registro: new Date("2020-01-01"), RUC: "123456789", correo_electronico: "contacto@editorialalpha.com", pais_origen: "USA" },
+    { editorial_ID: 2, fecha_registro: new Date("2019-05-15"), RUC: "987654321", correo_electronico: "contacto@editorialbeta.com", pais_origen: "Italia" },
+    { editorial_ID: 3, fecha_registro: new Date("2021-10-30"), RUC: "192837465", correo_electronico: "contacto@editorialgamma.com", pais_origen: "Malasia" },
+    { editorial_ID: 4, fecha_registro: new Date("2022-01-01"), RUC: "123456780", correo_electronico: "contacto@editorialdelta.com", pais_origen: "USA" },
+    { editorial_ID: 5, fecha_registro: new Date("2022-02-15"), RUC: "987654320", correo_electronico: "contacto@editorialepsilon.com", pais_origen: "Italia" },
+    { editorial_ID: 6, fecha_registro: new Date("2022-03-30"), RUC: "192837460", correo_electronico: "contacto@editorialzeta.com", pais_origen: "Malasia" },
+    { editorial_ID: 7, fecha_registro: new Date("2022-04-10"), RUC: "123456781", correo_electronico: "contacto@editorialeta.com", pais_origen: "España" },
+    { editorial_ID: 8, fecha_registro: new Date("2022-05-20"), RUC: "987654322", correo_electronico: "contacto@editorialtheta.com", pais_origen: "Francia" },
+    { editorial_ID: 9, fecha_registro: new Date("2022-06-25"), RUC: "192837461", correo_electronico: "contacto@editorialiota.com", pais_origen: "Reino Unido" },
+    { editorial_ID: 10, fecha_registro: new Date("2022-07-30"), RUC: "123456782", correo_electronico: "contacto@editorialkappa.com", pais_origen: "Alemania" }
 ])
 
-# Consultar documentos en `ubicacion`
-db.ubicacion.find().pretty()
 
-# Consultar documentos en `historial_localizacion`
-db.historial_localizacion.find().pretty()
 
-# Salir de mongosh
+
+db.editorial.find().pretty()
+db.Editorial_data.find().pretty()
+
+
 exit

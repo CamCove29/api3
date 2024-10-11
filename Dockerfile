@@ -1,14 +1,14 @@
-# Usa una imagen base de Python
 FROM python:3-slim
-
-# Establece el directorio de trabajo
 WORKDIR /programas/api-editorial
+RUN pip3 install flask
+RUN pip3 install pymongo
+RUN pip3 install flasgger
+RUN pip3 install pydantic
+RUN pip3 install "fastapi[standard]"
+RUN pip3 install pydantic
 
-# Instala las dependencias necesarias
-RUN pip3 install flask pymongo flasgger gunicorn  # Agrega Gunicorn aquí
+# Expone el puerto 8000
+EXPOSE 8083
 
-# Copia el contenido de la aplicación al contenedor
-COPY . .
-
-# Comando para ejecutar la aplicación con Gunicorn
-CMD ["gunicorn", "--bind", "0.0.0.0:8083", "app:app"]
+# Comando para ejecutar la aplicación FastAPI
+CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8083"]

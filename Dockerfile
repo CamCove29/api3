@@ -17,4 +17,4 @@ COPY . .
 EXPOSE 8083
 
 # Comando para ejecutar Uvicorn con la aplicación FastAPI
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8083"]
+CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8083"]
